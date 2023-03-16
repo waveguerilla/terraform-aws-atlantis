@@ -292,6 +292,12 @@ variable "atlantis_github_app_key_ssm_parameter_name" {
   default     = "/atlantis/github/app/key"
 }
 
+variable "atlantis_azuredevops_user_token_ssm_parameter_name" {
+  description = "Name of SSM parameter to keep atlantis_azuredevops_user_token"
+  type        = string
+  default     = "/atlantis/azuredevops/user/token"
+}
+
 variable "ssm_kms_key_arn" {
   description = "ARN of KMS key to use for encryption and decryption of SSM Parameters. Required only if your key uses a custom KMS key and not the default key"
   type        = string
@@ -654,6 +660,37 @@ variable "atlantis_bitbucket_base_url" {
   description = "Base URL of Bitbucket Server, use for Bitbucket on prem (Stash)"
   type        = string
   default     = ""
+}
+
+# Azure DevOps
+variable "atlantis_azuredevops_webhook_user" {
+  description = "Azure DevOps basic authentication username for inbound webhooks"
+  type        = string
+  default     = ""
+}
+
+variable "atlantis_azuredevops_webhook_password" {
+  description = "Azure DevOps basic authentication password for inbound webhooks "
+  type        = string
+  default     = ""
+}
+
+variable "atlantis_azuredevops_user" {
+  description = "Azure DevOps username that is running the Atlantis command"
+  type        = string
+  default     = ""
+}
+
+variable "atlantis_azuredevops_user_token" {
+  description = "Azure DevOps token of the user that is running the Atlantis command"
+  type        = string
+  default     = ""
+}
+
+variable "atlantis_azuredevops_hostname" {
+  description = "Azure DevOps server hostname, defaults to dev.azure.com"
+  type        = string
+  default     = "dev.azure.com"
 }
 
 variable "custom_environment_secrets" {

@@ -14,15 +14,15 @@ locals {
   )}"
   atlantis_url_events = "${local.atlantis_url}/events"
 
-  # Include only one group of secrets - for github, github app,  gitlab or bitbucket
-  has_secrets = try(coalesce(var.atlantis_gitlab_user_token, var.atlantis_github_user_token, var.atlantis_github_app_key, var.atlantis_bitbucket_user_token) != "", false)
+  # Include only one group of secrets - for github, github app,  gitlab, bitbucket or azuredevops
+  has_secrets = try(coalesce(var.atlantis_gitlab_user_token, var.atlantis_github_user_token, var.atlantis_github_app_key, var.atlantis_bitbucket_user_token, var.atlantis_azuredevops_user_token) != "", false)
 
   # token/key
-  secret_name_key        = local.has_secrets ? var.atlantis_gitlab_user_token != "" ? "ATLANTIS_GITLAB_TOKEN" : var.atlantis_github_user_token != "" ? "ATLANTIS_GH_TOKEN" : var.atlantis_github_app_key != "" ? "ATLANTIS_GH_APP_KEY" : "ATLANTIS_BITBUCKET_TOKEN" : ""
-  secret_name_value_from = local.has_secrets ? var.atlantis_gitlab_user_token != "" ? var.atlantis_gitlab_user_token_ssm_parameter_name : var.atlantis_github_user_token != "" ? var.atlantis_github_user_token_ssm_parameter_name : var.atlantis_github_app_key != "" ? var.atlantis_github_app_key_ssm_parameter_name : var.atlantis_bitbucket_user_token_ssm_parameter_name : ""
+  secret_name_key        = local.has_secrets ? var.atlantis_gitlab_user_token != "" ? "ATLANTIS_GITLAB_TOKEN" : var.atlantis_github_user_token != "" ? "ATLANTIS_GH_TOKEN" : var.atlantis_github_app_key != "" ? "ATLANTIS_GH_APP_KEY" : var.atlantis_bitbucket_user_token != "" ? "ATLANTIS_BITBUCKET_TOKEN" : "ATLANTIS_AZUREDEVOPS_TOKEN" : ""
+  secret_name_value_from = local.has_secrets ? var.atlantis_gitlab_user_token != "" ? var.atlantis_gitlab_user_token_ssm_parameter_name : var.atlantis_github_user_token != "" ? var.atlantis_github_user_token_ssm_parameter_name : var.atlantis_github_app_key != "" ? var.atlantis_github_app_key_ssm_parameter_name :  var.atlantis_bitbucket_user_token != "" ? var.atlantis_bitbucket_user_token_ssm_parameter_name : var.atlantis_azuredevops_user_token_ssm_parameter_name : ""
 
   # webhook
-  secret_webhook_key = local.has_secrets || var.atlantis_github_webhook_secret != "" ? var.atlantis_gitlab_user_token != "" ? "ATLANTIS_GITLAB_WEBHOOK_SECRET" : var.atlantis_github_user_token != "" || var.atlantis_github_webhook_secret != "" ? "ATLANTIS_GH_WEBHOOK_SECRET" : var.atlantis_github_app_key != "" || var.atlantis_github_webhook_secret != "" ? "ATLANTIS_GH_WEBHOOK_SECRET" : "ATLANTIS_BITBUCKET_WEBHOOK_SECRET" : ""
+  secret_webhook_key = local.has_secrets || var.atlantis_github_webhook_secret != "" ? var.atlantis_gitlab_user_token != "" ? "ATLANTIS_GITLAB_WEBHOOK_SECRET" : var.atlantis_github_user_token != "" || var.atlantis_github_webhook_secret != "" ? "ATLANTIS_GH_WEBHOOK_SECRET" : var.atlantis_github_app_key != "" || var.atlantis_github_webhook_secret != "" ? "ATLANTIS_GH_WEBHOOK_SECRET" : var.atlantis_azuredevops_webhook_user != "" || var.atlantis_azuredevops_webhook_password != "" ? "ATLANTIS_AZUREDEVOPS_WEBHOOK_PASSWORD" : "ATLANTIS_BITBUCKET_WEBHOOK_SECRET" : ""
 
   # determine if the alb has authentication enabled, otherwise forward the traffic unauthenticated
   alb_authentication_method = length(keys(var.alb_authenticate_oidc)) > 0 ? "authenticate-oidc" : length(keys(var.alb_authenticate_cognito)) > 0 ? "authenticate-cognito" : "forward"
@@ -65,6 +65,18 @@ locals {
     {
       name  = "ATLANTIS_BITBUCKET_USER"
       value = var.atlantis_bitbucket_user
+    },
+    {
+      name  = "ATLANTIS_AZUREDEVOPS_USER"
+      value = var.atlantis_azuredevops_user
+    },
+    {
+      name  = "ATLANTIS_AZUREDEVOPS_WEBHOOK_USER"
+      value = var.atlantis_azuredevops_webhook_user
+    },
+    {
+      name  = "ATLANTIS_AZUREDEVOPS_HOSTNAME"
+      value = var.atlantis_azuredevops_hostname
     },
     {
       name  = "ATLANTIS_BITBUCKET_BASE_URL"
@@ -180,6 +192,16 @@ resource "aws_ssm_parameter" "atlantis_gitlab_user_token" {
   name  = var.atlantis_gitlab_user_token_ssm_parameter_name
   type  = "SecureString"
   value = var.atlantis_gitlab_user_token
+
+  tags = local.tags
+}
+
+resource "aws_ssm_parameter" "atlantis_azuredevops_user_token" {
+  count = var.atlantis_azuredevops_user_token != "" ? 1 : 0
+
+  name  = var.atlantis_azuredevops_user_token_ssm_parameter_name
+  type  = "SecureString"
+  value = var.atlantis_azuredevops_user_token
 
   tags = local.tags
 }
